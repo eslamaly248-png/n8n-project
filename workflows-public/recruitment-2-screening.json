@@ -1,0 +1,1391 @@
+{
+  "name": "Recruitment 2 - Batch Evaluation (AI Screening)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "667411ea-691c-4388-9e50-ac41987eb329",
+      "name": "Run Batch Now"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -176
+      ],
+      "id": "400759aa-0512-4616-8b8f-e0d3606c4449",
+      "name": "Every Hour"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "list",
+          "cachedResultName": "Applications"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1000986962,
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "New"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "c1d44ed4-20ec-4464-b449-ae4f5e5f2071",
+      "name": "Get New Applications",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        480,
+        -96
+      ],
+      "id": "897b401c-5ec5-42a2-8c44-8ead26404d1b",
+      "name": "Loop Over Applications"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2bf95a5a-3009-4b46-a20d-a6be9bfc585a",
+              "name": "rowNumber",
+              "value": "={{ $json.row_number }}",
+              "type": "string"
+            },
+            {
+              "id": "20a59174-f3c0-463a-a6f7-efa4018f87ec",
+              "name": "fullName",
+              "value": "={{ $json['Full Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "3f6c2356-eb07-4aa5-b74a-44d636687872",
+              "name": "email",
+              "value": "={{ $json['Email'] }}",
+              "type": "string"
+            },
+            {
+              "id": "4b168f46-b47e-4460-9066-efec54900410",
+              "name": "position",
+              "value": "={{ $json['Position'] }}",
+              "type": "string"
+            },
+            {
+              "id": "69e55537-2a1b-4f6f-95ff-6e080383d64d",
+              "name": "cvLink",
+              "value": "={{ $json['CV Link'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f5cb961a-16c1-4d63-99e4-1cf8071066cc",
+              "name": "fileId",
+              "value": "={{ $json['CV Link'].match(/[-\\w]{25,}/)[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        -80
+      ],
+      "id": "5b52c6ce-a1d2-4e11-8fa1-a1b0d352fff7",
+      "name": "Current Application"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        928,
+        48
+      ],
+      "id": "89d957c4-e55a-46bd-8025-6a4274913da4",
+      "name": "Download CV",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        -80
+      ],
+      "id": "6a438d15-add4-4a51-a817-2b528124ea44",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba95f6d3-b17a-416c-8055-6d6f41a0e31e",
+              "name": "cvText",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "0fb07fa5-f2f8-4588-b12c-0598e5a9ef11",
+              "name": "cvSource",
+              "value": "pdf",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1504,
+        -176
+      ],
+      "id": "cb724b60-0eaa-4437-bbae-e012641a1fbb",
+      "name": "CV Text (PDF)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6c64b26-ca2b-49c7-9a9a-7d8d9175dbcb",
+              "name": "rowNumber",
+              "value": "={{ $('Current Application').item.json.rowNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "65b13601-619e-4de9-bc8e-e8c211b047a8",
+              "name": "fullName",
+              "value": "={{ $('Current Application').item.json.fullName }}",
+              "type": "string"
+            },
+            {
+              "id": "04536c73-cca4-4b8c-92a4-6a034cf5aa2b",
+              "name": "email",
+              "value": "={{ $('Current Application').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "49f55d5b-f981-4d4d-a300-e0279c875fc2",
+              "name": "position",
+              "value": "={{ $('Current Application').item.json.position }}",
+              "type": "string"
+            },
+            {
+              "id": "f525874d-b654-497f-b9e8-87cd88f0845f",
+              "name": "cvText",
+              "value": "={{ $json.cvText }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1904,
+        -160
+      ],
+      "id": "644262f9-23f8-4d04-baa9-bd4354fec744",
+      "name": "Prepare Application"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.cvText }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"currentRole\": \"string\",\n  \"yearsOfExperience\": 0,\n  \"skills\": [\"string\"],\n  \"education\": \"string\",\n  \"languages\": [\"string\"]\n}",
+        "options": {
+          "systemPromptTemplate": "Extract the candidate profile from the CV text. If a field is missing, leave it empty. Do not invent information."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        2064,
+        -160
+      ],
+      "id": "74b4c079-30a1-40b7-9f96-f1521c6683a2",
+      "name": "Extract Candidate Profile",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        32
+      ],
+      "id": "09e0e602-dcbf-4d26-838e-3a9f786ac1b0",
+      "name": "Profile Model."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2368,
+        96
+      ],
+      "id": "bdec3103-7904-445b-bb02-c30646f9959a",
+      "name": "Scoring Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c3d81762-f10c-4b3e-ad08-f746879f88a2",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2880,
+        0
+      ],
+      "id": "96d83d2c-2ee6-4ebd-8c34-ca82f4fbcfa5",
+      "name": "Evaluation Valid?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "861b6a58-0f3c-4d03-b9ce-c3844b74748f",
+              "leftValue": "= {{ ($json.text || '').trim().length }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -176
+      ],
+      "id": "0ac90a56-1075-4b50-83fe-9c8b77726d56",
+      "name": "Readable PDF?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate this candidate for the position: {{ $('Prepare Application').item.json.position }}\n\nCandidate profile:\n{{ JSON.stringify($json.output) }}\n\nCV text:\n{{ $('Prepare Application').item.json.cvText }}\n\nGive a score from 0 to 100 based on how well the candidate fits the position.\nDecision rules: score 75 or more = \"interview\", 50 to 74 = \"borderline\", below 50 = \"decline\".\nBase your answer only on the CV. Do not invent information.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2384,
+        -176
+      ],
+      "id": "b57c95f0-232b-40e4-be10-dcff58d4bfc6",
+      "name": "Score Candidate",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"score\": 0,\n  \"decision\": \"interview\",\n  \"summary\": \"string\",\n  \"strengths\": [\"string\"],\n  \"gaps\": [\"string\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2496,
+        48
+      ],
+      "id": "31ccc582-8408-4a17-9a47-2e179cba7100",
+      "name": "Evaluation Schema"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const out = $json.output || {};\nconst app = $('Prepare Application').item.json;\nconst errors = [];\n\nconst score = Number(out.score);\nif (!Number.isFinite(score) || score < 0 || score > 100) {\n  errors.push('Score must be a number between 0 and 100');\n}\n\nconst summary = String(out.summary || '').trim();\nif (summary.length < 10) errors.push('Summary is missing');\n\nlet decision = '';\nif (errors.length === 0) {\n  decision = score >= 75 ? 'interview' : score >= 50 ? 'borderline' : 'decline';\n}\n\nreturn {\n  json: {\n    rowNumber: app.rowNumber,\n    fullName: app.fullName,\n    email: app.email,\n    position: app.position,\n    score,\n    decision,\n    summary,\n    strengths: Array.isArray(out.strengths) ? out.strengths.join(', ') : '',\n    gaps: Array.isArray(out.gaps) ? out.gaps.join(', ') : '',\n    isValid: errors.length === 0,\n    errors: errors.join(', ')\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        -272
+      ],
+      "id": "f51a5084-2a8a-45b7-ab9c-c7ab373593bc",
+      "name": "Validate Evaluation"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "interview",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0f36435c-7880-482e-803e-1ff47063cbea"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "interview"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b8c573da-9180-4ac2-a5e1-9f3cc8c12cb5",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "borderline",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "borderline"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8c8e1340-0a9f-453e-970c-79300f5a6cd1",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "decline",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "decline"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3072,
+        -208
+      ],
+      "id": "fd6ffb86-3a3d-41d6-9b26-8362cbf2b281",
+      "name": "Decision"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_SENDTO",
+        "subject": "=Your application - {{ $json.position }}",
+        "emailType": "text",
+        "message": "=Hello {{ $json.fullName }},  Thank you for your interest in the {{ $json.position }} position. After careful review, we will not be moving forward with your application at this time.  We wish you the best in your career.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3296,
+        -48
+      ],
+      "id": "b632b7d4-b3da-4366-96b9-df490a447d82",
+      "name": "Send Polite Decline",
+      "webhookId": "d0ff1d44-8075-40ee-ac44-7c50d6b75696"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_SENDTO",
+        "subject": "=Subject (Expression): Interview Invitation - {{ $json.position }}",
+        "emailType": "text",
+        "message": "=Hello {{ $json.fullName }},  Thank you for applying for the {{ $json.position }} position. We were impressed by your profile and would like to invite you to an interview. We will contact you shortly with the details.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3296,
+        -480
+      ],
+      "id": "a4e67ab0-e5b3-4d9e-95e9-2d79bbffcd69",
+      "name": "Invite to Interview",
+      "webhookId": "0a14fa5f-2d6e-43c2-9851-4bbfdb72329a"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_SENDTO",
+        "subject": "=Subject (Expression): Borderline Candidate - {{ $json.fullName }}",
+        "emailType": "text",
+        "message": "=Candidate: {{ $json.fullName }} Position: {{ $json.position }} Score: {{ $json.score }}  Summary: {{ $json.summary }} Strengths: {{ $json.strengths }} Gaps: {{ $json.gaps }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3296,
+        -240
+      ],
+      "id": "d3e43405-da40-48d6-8cdb-9b9e325b053f",
+      "name": "Flag Borderline for HR",
+      "webhookId": "8bbe6d3b-1c20-4e08-bf0a-7e7b038891b5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "list",
+          "cachedResultName": "Applications"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1000986962,
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Validate Evaluation').item.json.rowNumber }}",
+            "Status": "Reviewed",
+            "Score": "={{ $('Validate Evaluation').item.json.score }}",
+            "Decision": "={{ $('Validate Evaluation').item.json.decision }}",
+            "Reviewed At": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "Summary ": "={{ $('Validate Evaluation').item.json.summary }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decision",
+              "displayName": "Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewed At",
+              "displayName": "Reviewed At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary ",
+              "displayName": "Summary ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3728,
+        704
+      ],
+      "id": "d7f1c999-fce9-4752-904f-d58edb31420b",
+      "name": "Save Result to Sheet"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3ef90bf9-0865-4779-9710-8eb038b33479",
+              "name": "rowNumber",
+              "value": "={{ $('Prepare Application').item.json.rowNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "79fbe822-946e-4a64-9de9-4b458940c80b",
+              "name": "fullName",
+              "value": "={{ $('Prepare Application').item.json.fullName }}",
+              "type": "string"
+            },
+            {
+              "id": "80eef75f-cf84-4b34-afe9-d2274c655b68",
+              "name": "email",
+              "value": "={{ $('Prepare Application').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "f9298802-8fb5-44be-b5b5-b960abfc1c6f",
+              "name": "position",
+              "value": "={{ $('Prepare Application').item.json.position }}",
+              "type": "string"
+            },
+            {
+              "id": "a7df23a7-24f4-4ef8-827d-3a49a0958de1",
+              "name": "failureReason",
+              "value": "={{ $json.errors || 'AI evaluation failed' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3136,
+        272
+      ],
+      "id": "d3609563-bc28-4bce-9263-db44186c28e1",
+      "name": "Describe AI Failure"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "list",
+          "cachedResultName": "Applications"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1000986962,
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.rowNumber }}",
+            "Status": "Manual Review",
+            "Summary ": "={{ $json.failureReason }}",
+            "Reviewed At": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decision",
+              "displayName": "Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewed At",
+              "displayName": "Reviewed At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary ",
+              "displayName": "Summary ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3264,
+        496
+      ],
+      "id": "ac5478e4-0ab2-4ba4-b282-cc0a188ccd33",
+      "name": "Mark for Manual Review"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_SENDTO",
+        "subject": "=Manual Review Needed - {{ $('Describe AI Failure').item.json.fullName }}",
+        "emailType": "text",
+        "message": "=The AI evaluation failed for this application and it needs manual review.  Candidate: {{ $('Describe AI Failure').item.json.fullName }} Position: {{ $('Describe AI Failure').item.json.position }} Email: {{ $('Describe AI Failure').item.json.email }} Reason: {{ $('Describe AI Failure').item.json.failureReason }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3456,
+        624
+      ],
+      "id": "12c5f70c-f4fb-495f-9d89-a66417941afc",
+      "name": "Notify HR Manual Review",
+      "webhookId": "c02522f7-f450-4c89-ad43-390969e003d0"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "Extract all the text from this CV exactly as written. Return only the extracted text, with no comments or explanations.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1536,
+        16
+      ],
+      "id": "60766e30-fae3-4f2e-a0b8-0c74e4c4acd7",
+      "name": "OCR Scanned CV",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "35567147-e7fa-4bf5-a7fe-55129f38fac4",
+              "name": "cvText",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "a66cef09-b1fa-4536-837d-0c18d87e06da",
+              "name": "cvSource",
+              "value": "ocr",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1728,
+        -48
+      ],
+      "id": "d6351b70-e798-4aa4-a346-189d31db78c6",
+      "name": "CV Text (OCR)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2512,
+        272
+      ],
+      "id": "a0b28213-591f-44f0-94e0-3f3c212463ef",
+      "name": "Fixing Model"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4768a335-bfdf-4057-81c3-82b261fa0a0b",
+              "name": "error_message",
+              "value": "={{ $json.error }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2880,
+        608
+      ],
+      "id": "cff69a17-bec2-4fab-87c8-ba6e9d5f0ad7",
+      "name": "Describe AI Failure1"
+    }
+  ],
+  "connections": {
+    "Run Batch Now": {
+      "main": [
+        [
+          {
+            "node": "Get New Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Get New Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get New Applications": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Applications": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Current Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current Application": {
+      "main": [
+        [
+          {
+            "node": "Download CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CV": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe AI Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Readable PDF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CV Text (PDF)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Application": {
+      "main": [
+        [
+          {
+            "node": "Extract Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Score Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe AI Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Profile Model.": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Candidate Profile",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Candidate",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluation Valid?": {
+      "main": [
+        [
+          {
+            "node": "Decision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe AI Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Readable PDF?": {
+      "main": [
+        [
+          {
+            "node": "CV Text (PDF)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OCR Scanned CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Candidate": {
+      "main": [
+        [
+          {
+            "node": "Validate Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe AI Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluation Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Score Candidate",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Evaluation Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision": {
+      "main": [
+        [
+          {
+            "node": "Invite to Interview",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flag Borderline for HR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Polite Decline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invite to Interview": {
+      "main": [
+        [
+          {
+            "node": "Save Result to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Polite Decline": {
+      "main": [
+        [
+          {
+            "node": "Save Result to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flag Borderline for HR": {
+      "main": [
+        [
+          {
+            "node": "Save Result to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Result to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describe AI Failure": {
+      "main": [
+        [
+          {
+            "node": "Mark for Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark for Manual Review": {
+      "main": [
+        [
+          {
+            "node": "Notify HR Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify HR Manual Review": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR Scanned CV": {
+      "main": [
+        [
+          {
+            "node": "CV Text (OCR)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Describe AI Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CV Text (OCR)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fixing Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Evaluation Schema",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describe AI Failure1": {
+      "main": [
+        [
+          {
+            "node": "Describe AI Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": []
+}

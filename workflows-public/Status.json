@@ -1,0 +1,33 @@
+{
+  "name": "Status",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "status",
+        "options": {
+          "allowedOrigins": "https://eslamaly248-png.github.io"
+        }
+      },
+      "id": "8cd6f377-b236-46fb-8417-8f05ca55bab6",
+      "name": "Status Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "6f1d3c52-8a4e-4b7a-9d21-3c5e7a9b1f02"
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "TXZY2bv6FtcVDSqR",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "nodeGroups": []
+}
